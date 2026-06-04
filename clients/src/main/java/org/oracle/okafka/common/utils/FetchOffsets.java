@@ -94,7 +94,7 @@ public class FetchOffsets {
 			        "        END; " +
 			        "    END LOOP; " +
 			        "    IF NOT found THEN " +
-			        "        RAISE_APPLICATION_ERROR(20003, 'No messages in the given partition'); " +
+			        "        RAISE NO_DATA_FOUND; " +
 			        "    END IF; " +
 			        "    ? := msg_id; " +
 			        "    ? := next_timestamp; " +
@@ -393,7 +393,7 @@ public class FetchOffsets {
 			if (sequence == -1)
 				return -1;
 			long offset = subshard * MessageIdConverter.DEFAULT_SUBPARTITION_SIZE + sequence;
-			return offset;
+			return offset+1;
 
 		} catch (SQLException sqle) {
 			if (sqle.getErrorCode() == 1403) {

@@ -66,14 +66,15 @@ project(':clients') {
         implementation group: 'javax.jms', name: 'javax.jms-api', version: '2.0'
         implementation group: 'com.oracle.database.security', name: 'oraclepki', version: '23.4.0.24.05'
         implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha0'
-        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.1'     
+        runtimeOnly group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha0'
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.2'     
        
         // Test dependencies
         testImplementation group: 'org.easymock', name: 'easymock', version: '3.6'
         testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.0-beta.5'
         testImplementation group: 'org.powermock', name: 'powermock-api-support', version: '2.0.5'
         testImplementation group: 'org.powermock', name: 'powermock-api-easymock', version: '2.0.0-beta.5'
-	testImplementation group: 'junit', name: 'junit', version: '4.12'
+	    testImplementation group: 'junit', name: 'junit', version: '4.12'
     }
 
     javadoc {
@@ -122,10 +123,28 @@ project(':clients') {
 
         duplicatesStrategy 'exclude'
     }
-    
-    tasks.withType(Test) {
-    onlyIf { false }
-	}
+
+    tasks.named('test') {
+        description = 'Runs fast unit tests. OKafka TEQ integration tests run with integrationTest.'
+        exclude 'org/oracle/okafka/tests/**'
+        testLogging {
+            events 'passed', 'skipped', 'failed'
+            exceptionFormat 'full'
+        }
+    }
+
+    tasks.register('integrationTest', Test) {
+        description = 'Runs OKafka integration tests that require Oracle TEQ configuration in clients/src/test/java/test.config.'
+        group = 'verification'
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        include 'org/oracle/okafka/tests/**'
+        shouldRunAfter tasks.named('test')
+        testLogging {
+            events 'passed', 'skipped', 'failed'
+            exceptionFormat 'full'
+        }
+    }
 }
 
 
@@ -140,7 +159,7 @@ project(':examples:consumer') {
         // These dependencies are used by the application.
         implementation project(':clients')
         implementation group: 'com.oracle.database.security', name: 'oraclepki', version: '23.4.0.24.05'
-        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.1'
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.2'
     }
 
 
@@ -177,7 +196,7 @@ project(':examples:producer') {
         // These dependencies are used by the application.
         implementation project(':clients')
         implementation group: 'com.oracle.database.security', name: 'oraclepki', version: '23.4.0.24.05'
-        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.1'
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.2'
     }
 
     tasks.named('jar') {
