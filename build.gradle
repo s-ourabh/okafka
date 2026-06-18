@@ -44,8 +44,10 @@ ext {
 project(':clients') {
     apply plugin : 'java-library'
 
-    sourceCompatibility = minJavaVersion
-    targetCompatibility = minJavaVersion
+    java {
+        sourceCompatibility = minJavaVersion
+        targetCompatibility = minJavaVersion
+    }
 
     sourceSets {
         main {
@@ -137,7 +139,7 @@ project(':clients') {
     }
 
     tasks.register('integrationTest', Test) {
-        description = 'Runs OKafka integration tests that require Oracle TEQ configuration in clients/src/test/java/test.config.'
+        description = 'Runs OKafka integration tests that require Oracle TEQ configuration.'
         group = 'verification'
         testClassesDirs = sourceSets.test.output.classesDirs
         classpath = sourceSets.test.runtimeClasspath
@@ -148,6 +150,20 @@ project(':clients') {
             exceptionFormat 'full'
         }
     }
+
+    tasks.register('runIntegrationTestSuite', JavaExec) {
+        description = 'Runs the OKafka integration test suite through org.oracle.okafka.tests.TestRunner.'
+        group = 'verification'
+        dependsOn tasks.named('testClasses')
+        classpath = sourceSets.test.runtimeClasspath
+        mainClass = 'org.oracle.okafka.tests.TestRunner'
+    }
+
+    tasks.named('check') {
+        if (project.hasProperty('runIntegrationTests')) {
+            dependsOn tasks.named('integrationTest')
+        }
+    }
 }
 
 
@@ -155,8 +171,10 @@ project(':examples:consumer') {
     apply plugin : 'java'
     apply plugin : 'application'
 
-    sourceCompatibility = minJavaVersion
-    targetCompatibility = minJavaVersion
+    java {
+        sourceCompatibility = minJavaVersion
+        targetCompatibility = minJavaVersion
+    }
 
     dependencies {
         // These dependencies are used by the application.
@@ -193,8 +211,10 @@ project(':examples:producer') {
     apply plugin : 'java'
     apply plugin : 'application'
 
-    sourceCompatibility = minJavaVersion
-    targetCompatibility = minJavaVersion
+    java {
+        sourceCompatibility = minJavaVersion
+        targetCompatibility = minJavaVersion
+    }
 
     dependencies {
         // These dependencies are used by the application.

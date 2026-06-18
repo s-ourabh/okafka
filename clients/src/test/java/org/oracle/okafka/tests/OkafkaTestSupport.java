@@ -1,7 +1,11 @@
 package org.oracle.okafka.tests;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +30,11 @@ import org.oracle.okafka.clients.producer.KafkaProducer;
 
 public final class OkafkaTestSupport {
 
-	private static final String CONFIG_PATH = "src/test/java/test.config";
+	private static final String CONFIG_RESOURCE = "test.config";
+	private static final String CONFIG_RESOURCE_PATH = "src/test/resources/test.config";
+	private static final String ROOT_CONFIG_RESOURCE_PATH = "clients/src/test/resources/test.config";
+	private static final String TNS_ADMIN_CONFIG = "oracle.net.tns_admin";
+	private static final String DEFAULT_TNS_ADMIN_PATH = "./src/test/resources";
 	private static final long FUTURE_TIMEOUT_SECONDS = 60L;
 	private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
 	private static final Duration CONSUME_TIMEOUT = Duration.ofSeconds(60);
@@ -37,12 +45,68 @@ public final class OkafkaTestSupport {
 
 	public static Properties baseProperties() {
 		Properties properties = new Properties();
-		try (InputStream input = new FileInputStream(CONFIG_PATH)) {
-			properties.load(input);
+		try {
+			ConfigSource configSource = openConfig();
+			try (InputStream input = configSource.input) {
+				properties.load(input);
+			}
+			useResourceTnsAdmin(properties, configSource.directory);
 			Assert.assertFalse("test.config must contain at least one property", properties.isEmpty());
 			return properties;
 		} catch (Exception e) {
-			throw new AssertionError("Unable to load OKafka test configuration from " + CONFIG_PATH, e);
+			throw new AssertionError("Unable to load OKafka test configuration from "
+					+ CONFIG_RESOURCE_PATH + ", " + ROOT_CONFIG_RESOURCE_PATH + ", or classpath resource "
+					+ CONFIG_RESOURCE, e);
+		}
+	}
+
+	private static ConfigSource openConfig() throws Exception {
+		File resourceConfig = new File(CONFIG_RESOURCE_PATH);
+		if (resourceConfig.isFile()) {
+			return new ConfigSource(new FileInputStream(resourceConfig), resourceConfig.getAbsoluteFile().getParentFile());
+		}
+
+		File rootResourceConfig = new File(ROOT_CONFIG_RESOURCE_PATH);
+		if (rootResourceConfig.isFile()) {
+			return new ConfigSource(new FileInputStream(rootResourceConfig), rootResourceConfig.getAbsoluteFile().getParentFile());
+		}
+
+		URL configResource = OkafkaTestSupport.class.getClassLoader().getResource(CONFIG_RESOURCE);
+		if (configResource != null) {
+			File configDirectory = null;
+			if ("file".equals(configResource.getProtocol())) {
+				configDirectory = Paths.get(configResource.toURI()).getParent().toFile();
+			}
+			return new ConfigSource(configResource.openStream(), configDirectory);
+		}
+
+		throw new FileNotFoundException(CONFIG_RESOURCE);
+	}
+
+	private static void useResourceTnsAdmin(Properties properties, File configDirectory) throws Exception {
+		String configuredTnsAdmin = properties.getProperty(TNS_ADMIN_CONFIG);
+		if (!DEFAULT_TNS_ADMIN_PATH.equals(configuredTnsAdmin)) {
+			return;
+		}
+
+		if (configDirectory != null && new File(configDirectory, "ojdbc.properties").isFile()) {
+			properties.setProperty(TNS_ADMIN_CONFIG, configDirectory.getAbsolutePath());
+			return;
+		}
+
+		URL ojdbcProperties = OkafkaTestSupport.class.getClassLoader().getResource("ojdbc.properties");
+		if (ojdbcProperties != null && "file".equals(ojdbcProperties.getProtocol())) {
+			properties.setProperty(TNS_ADMIN_CONFIG, Paths.get(ojdbcProperties.toURI()).getParent().toString());
+		}
+	}
+
+	private static final class ConfigSource {
+		private final InputStream input;
+		private final File directory;
+
+		private ConfigSource(InputStream input, File directory) {
+			this.input = input;
+			this.directory = directory;
 		}
 	}
 

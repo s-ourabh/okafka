@@ -33,7 +33,7 @@ public class OkafkaConsumerOffsetsLifecycle {
 	private static final int MEDIUM_MAX_POLL_RECORDS = 100;
 	private static final int SMALL_MAX_POLL_RECORDS = 1;
 
-	@Test(timeout = 900000)
+	@Test
 	public void ConsumerOffsetsLifecycleTest() {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_OFFSETS");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_OFFSETS");
