@@ -13,17 +13,20 @@ Read the conversion reference:
 
 - `KAFKA_TO_OKAFKA_CONVERSION_GUIDE.md`
 
-Then inspect the target application and the local OKafka client source. If the user provides an Apache Kafka source tree, use it only as a compatibility reference for public API differences.
+Then inspect the target Kafka application. This skill and its conversion guide are the complete conversion reference for a normal Kafka-to-OKafka migration.
 
-Useful local OKafka references in this repository:
+If another AI assistant does not support structured skills, treat this file and `KAFKA_TO_OKAFKA_CONVERSION_GUIDE.md` as ordinary markdown instructions and follow the workflow directly.
 
-- `clients/src/main/java/org/oracle/okafka/clients/producer/KafkaProducer.java`
-- `clients/src/main/java/org/oracle/okafka/clients/consumer/KafkaConsumer.java`
-- `clients/src/main/java/org/oracle/okafka/clients/admin/KafkaAdminClient.java`
-- `clients/src/main/java/org/oracle/okafka/clients/CommonClientConfigs.java`
-- `clients/src/test/java/org/oracle/okafka/tests`
+Do not make the conversion depend on any extra OKafka reference material. Use the rules below and in the guide.
 
-If the repo also has the `okafka-clients` skill or local OKafka context notes, read those after this skill when implementation details are needed.
+## Failsafe References
+
+Use these only when the conversion becomes ambiguous, an API behavior is unclear, or the target application uses a Kafka/OKafka surface not covered by this skill and guide:
+
+- Oracle OKafka source: https://github.com/oracle/okafka
+- Apache Kafka 3.9 source: https://github.com/apache/kafka/tree/3.9
+
+Treat these links as fallback references, not as required reading for every conversion.
 
 ## Workflow
 
@@ -34,7 +37,7 @@ If the repo also has the `okafka-clients` skill or local OKafka context notes, r
    - Find unsupported or risky API calls before editing.
 
 2. Update build and dependency wiring.
-   - Make the application compile against the OKafka client artifact/source used by the project.
+   - Make the application compile against the OKafka client artifact used by the project.
    - Keep Apache Kafka common/client API dependencies that OKafka still uses for interfaces and shared model types.
    - Remove direct Kafka broker-only runtime assumptions from config, scripts, and documentation.
 
@@ -58,11 +61,12 @@ If the repo also has the `okafka-clients` skill or local OKafka context notes, r
    - Pattern subscription and manual assignment are unsupported.
    - Offset-map commit overloads, pause/resume, wakeup, enforceRebalance, and some newer clientInstanceId APIs are unsupported.
    - Many modern Admin APIs unrelated to TEQ topic/group/offset flows are unsupported.
-   - Several modern Admin, Consumer, and Producer APIs throw OKafka `FeatureNotSupportedException`.
+   - Several modern Admin, Consumer, and Producer APIs may throw OKafka `FeatureNotSupportedException`.
    - Topic names are commonly uppercased internally; watch case-sensitive assumptions.
    - Metadata, topic operations, offsets, and group operations are real Oracle Database operations.
    - Transactional producer code must be reviewed for OKafka's Oracle-specific transaction mode and `oracle.transactional.producer`.
-   - Compare behavior against current OKafka tests before declaring an API unsupported; support may have changed.
+   - Do not carry Kafka `isolation.level` assumptions into OKafka consumer code; Oracle Database transaction visibility already exposes committed data to consumers.
+   - Use the compatibility rules in the guide when deciding whether an API should be kept, removed, or redesigned.
 
 6. If the input is test code, make converted tests runnable in a cloned environment.
    - Put reusable test configuration under test resources, for example `src/test/resources/test.config`, not beside Java source files.
@@ -78,7 +82,7 @@ If the repo also has the `okafka-clients` skill or local OKafka context notes, r
    - Run a focused smoke test for admin/create topic, producer/send, consumer/poll.
    - Run the converted application path with a real Oracle TEQ database, wallet/credentials, and expected topics.
    - Then run broader integration tests if a configured Oracle TEQ database is available.
-   - For converted tests in this repo, config should come from `clients/src/test/resources/test.config` and `ojdbc.properties`.
+   - For converted tests, config should come from test resources such as `src/test/resources/test.config` and `src/test/resources/ojdbc.properties`.
    - Document exact commands for application startup, single-test, all-test, and suite-runner execution as applicable.
 
 ## Output Expectations

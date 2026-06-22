@@ -14,8 +14,8 @@ public class TestRunner {
 			OkafkaAutoOffsetReset.class, OkafkaSeekToBeginning.class, OkafkaSeekToEnd.class,
 			OkafkaUnsubscribe.class, OkafkaOffsetsForTimes.class,
 			OkafkaPartitionsFor.class, OkafkaPosition.class, OkafkaConsumerOffsetsLifecycle.class,
-			ListConsumerGroups.class, ListConsumerGroupOffsets.class, DeleteConsumerGroups.class,
-			ProducerMetricsTest.class, ConsumerMetricsTest.class };
+			OkafkaTransactionalProducerConsumer.class, ListConsumerGroups.class, ListConsumerGroupOffsets.class,
+			DeleteConsumerGroups.class, ProducerMetricsTest.class, ConsumerMetricsTest.class };
 
 	public static void main(String[] args) {
 		int totalRun = 0;

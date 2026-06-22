@@ -40,9 +40,9 @@ public class OkafkaConsumerOffsetsLifecycle {
 		TopicPartition topicPartition = new TopicPartition(topic, 0);
 		Set<TopicPartition> topicPartitions = Collections.singleton(topicPartition);
 
-		Properties adminProps = OkafkaSetup.setup();
-		Properties producerProps = OkafkaSetup.setup();
-		Properties consumerProps = OkafkaSetup.setup();
+		Properties adminProps = OkafkaTestSupport.baseProperties();
+		Properties producerProps = OkafkaTestSupport.baseProperties();
+		Properties consumerProps = OkafkaTestSupport.baseProperties();
 
 		producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 		producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");

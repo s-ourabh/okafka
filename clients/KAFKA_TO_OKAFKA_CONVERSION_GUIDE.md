@@ -14,18 +14,44 @@ For every application conversion, inspect and update these places:
 - Unsupported Kafka APIs that must be removed, redesigned, or guarded.
 - Operational docs or README steps needed to connect to Oracle Database TEQ.
 
-Use the OKafka source as the source of truth for supported behavior. In this repository, the important files are:
+This guide is self-contained. Use the rules in this document as the conversion baseline for a normal Kafka-to-OKafka migration.
 
-```text
-clients/src/main/java/org/oracle/okafka/clients/producer/KafkaProducer.java
-clients/src/main/java/org/oracle/okafka/clients/consumer/KafkaConsumer.java
-clients/src/main/java/org/oracle/okafka/clients/admin/KafkaAdminClient.java
-clients/src/main/java/org/oracle/okafka/clients/CommonClientConfigs.java
-clients/src/main/java/org/oracle/okafka/clients/producer/ProducerConfig.java
-clients/src/main/java/org/oracle/okafka/clients/consumer/ConsumerConfig.java
-```
+If conversion becomes ambiguous or the application uses behavior not covered here, use these fallback references only for that unclear area:
 
-If the user provides an Apache Kafka source tree, use it to understand the original Kafka API surface and then compare that surface with OKafka. Do not assume Kafka 3.x behavior is supported just because the method exists in Apache Kafka.
+- Oracle OKafka source: https://github.com/oracle/okafka
+- Apache Kafka 3.9 source: https://github.com/apache/kafka/tree/3.9
+
+The conversion target is an application that constructs OKafka producer, consumer, and admin clients while continuing to use many Apache Kafka interfaces and data model classes. The main migration work is changing concrete client construction, replacing Kafka broker connection settings with Oracle Database TEQ settings, and redesigning unsupported Kafka broker-only APIs.
+
+## Self-Contained OKafka Baseline
+
+Use these baseline facts during conversion:
+
+- OKafka connects to Oracle Database Transactional Event Queues through JDBC.
+- `bootstrap.servers` is the Oracle database host and listener port, for example `db-host:1521`.
+- PLAINTEXT mode requires `security.protocol=PLAINTEXT`, `oracle.service.name`, and `oracle.net.tns_admin`.
+- SSL/wallet mode requires `security.protocol=SSL`, `oracle.net.tns_admin`, and `tns.alias`.
+- `oracle.net.tns_admin` is always a directory, not a file path.
+- For PLAINTEXT, the `oracle.net.tns_admin` directory must contain `ojdbc.properties` with `user` and `password`.
+- For wallet/SSL, the `oracle.net.tns_admin` directory is the wallet/TNS directory and usually contains `tnsnames.ora` plus wallet files.
+- OKafka active client classes live under `org.oracle.okafka.clients.*`.
+- Apache Kafka interfaces and model types are still commonly used by OKafka APIs.
+- Consumers should subscribe to one topic at a time.
+- Pattern subscription and manual partition assignment should be redesigned.
+- Kafka broker transaction assumptions do not map one-to-one to OKafka.
+- OKafka transactional producer mode uses `oracle.transactional.producer=true`.
+- Oracle Database exposes committed records to consumers by default; do not add Kafka `isolation.level=read_committed` just to make OKafka consumers see committed data.
+- Admin, topic, offset, group, producer, and consumer operations are real Oracle Database operations and may need database privileges.
+- Topic names often need to be uppercase or treated case-carefully.
+
+Minimum dependency expectation for converted applications:
+
+- OKafka client artifact.
+- Apache Kafka client API classes used by OKafka-compatible interfaces and models.
+- Oracle JDBC driver.
+- Oracle AQ/JMS dependencies required by the OKafka distribution.
+- Oracle wallet/security dependencies when SSL/wallet mode is used.
+- Logging dependency such as SLF4J binding as required by the application.
 
 ## Package And Class Mapping
 
@@ -153,18 +179,18 @@ If the source app has a helper like `KafkaTestConfig`, convert it so `clientProp
 
 For PLAINTEXT, validate early that `oracle.net.tns_admin` points to an existing directory and contains `ojdbc.properties` with nonblank `user` and `password`. This gives a clearer app error than a later Oracle login failure.
 
-For repo-local OKafka tests, prefer:
+For Gradle/Maven test projects, prefer:
 
 ```text
-clients/src/test/resources/test.config
-clients/src/test/resources/ojdbc.properties
+src/test/resources/test.config
+src/test/resources/ojdbc.properties
 ```
 
 Use `oracle.net.tns_admin=./src/test/resources` only as a repo-local default; preserve any absolute/custom user path.
 
 ## Application Runtime Setup
 
-For normal applications, the converted code should get OKafka settings through the same configuration mechanism the application already uses: properties files, environment variables, Spring configuration, command-line args, or secrets manager. Do not bake developer-machine paths into source code.
+For normal applications, the converted code should get OKafka settings through the same configuration mechanism the application already uses: properties files, environment variables, Spring configuration, command-line args, or secrets manager. Do not bake developer-machine paths into reusable application files.
 
 Minimum PLAINTEXT runtime properties:
 
@@ -277,7 +303,7 @@ String groupId = OkafkaTestSupport.uniqueGroup("G_MY_TEST");
 
 This avoids collisions between repeated local runs, IDE runs, Gradle runs, and CI jobs.
 
-Use the project's existing support helper if one exists. In this repository, converted tests should use `OkafkaTestSupport` instead of creating their own config loader, producer factory, consumer factory, or admin factory.
+Use the project's existing support helper if one exists. If no helper exists, create one small test helper for loading config, creating admin/producer/consumer clients, generating unique topic/group names, waiting on futures with timeouts, and cleaning up topics.
 
 For Gradle, document commands like:
 
@@ -313,7 +339,7 @@ Watch for unsupported or Oracle-specific behavior:
 - `clientInstanceId(Duration)` is unsupported.
 - Kafka `transactional.id` is not the same migration knob as OKafka's Oracle transaction mode.
 - OKafka transactional producer code depends on `oracle.transactional.producer=true` and Oracle-specific transaction behavior.
-- `sendOffsetsToTransaction(...)` overloads are unsupported in this OKafka source.
+- `sendOffsetsToTransaction(...)` overloads should be treated as unsupported for conversion.
 - Topic names may be uppercased internally.
 
 Kafka producer configs often use constants:
@@ -356,8 +382,9 @@ Check these differences:
 - Manual `assign` is unsupported.
 - Offset-map commit overloads are unsupported.
 - `pause`, `resume`, `paused`, `enforceRebalance`, and `clientInstanceId` may be unsupported depending on the current codebase version.
-- `wakeup()` and `seek(TopicPartition, OffsetAndMetadata)` are unsupported in this OKafka source.
-- Check current OKafka tests before changing `currentLag`: recent tests exercise `currentLag` after subscription/assignment in offset lifecycle flows.
+- `wakeup()` and `seek(TopicPartition, OffsetAndMetadata)` should be treated as unsupported for conversion.
+- Kafka `isolation.level` settings should be reviewed and usually removed during OKafka conversion because Oracle Database does not use that Kafka broker isolation setting to decide consumer visibility; committed records are visible by default.
+- Treat `currentLag` as usable only after subscription/assignment and after the application has a clear expected end-offset/committed-offset state.
 - `poll(Duration)` requires a subscription and may trigger metadata/group/DB work before fetch.
 
 Kafka code that relies on manual assignment should be redesigned around `subscribe(Collections.singletonList(topic))` and poll until assignment is visible.
@@ -423,13 +450,13 @@ Admin operations are DB-backed and can be slower or privilege-sensitive. Wrap te
 
 ## API Compatibility Checklist
 
-The OKafka source intentionally reuses many Apache Kafka interfaces and model types, but behavior is not full Kafka broker parity.
+OKafka intentionally reuses many Apache Kafka interfaces and model types, but behavior is not full Kafka broker parity.
 
 | Area | Usually supported / keep | Must review or rewrite |
 | --- | --- | --- |
 | Producer basics | `send`, callback, `flush`, `close`, `partitionsFor`, metrics | `clientInstanceId`, Kafka transaction offset handoff, broker-specific tuning assumptions |
 | Producer transactions | OKafka `initTransactions`, `beginTransaction`, `commitTransaction`, `abortTransaction`, `getDBConnection` when configured for Oracle transactions | Kafka `transactional.id`-centric designs and `sendOffsetsToTransaction` |
-| Consumer basics | `subscribe(Collection)` with one topic, `poll`, `commitSync`, `commitAsync`, `seek(long)`, `seekToBeginning`, `seekToEnd`, `position`, committed offsets, beginning/end offsets, `offsetsForTimes`, `partitionsFor`, `currentLag` | Multi-topic subscription, pattern subscription, manual `assign`, offset-map commit overloads, `pause`, `resume`, `paused`, `wakeup`, `enforceRebalance`, `clientInstanceId` |
+| Consumer basics | `subscribe(Collection)` with one topic, `poll`, `commitSync`, `commitAsync`, `seek(long)`, `seekToBeginning`, `seekToEnd`, `position`, committed offsets, beginning/end offsets, `offsetsForTimes`, `partitionsFor`, `currentLag` | Multi-topic subscription, pattern subscription, manual `assign`, offset-map commit overloads, `pause`, `resume`, `paused`, `wakeup`, `enforceRebalance`, `clientInstanceId`, Kafka `isolation.level` assumptions |
 | Admin basics | create/delete/list/describe topics, create partitions, list offsets, list/delete consumer groups, list group offsets | ACLs, config mutation/description, broker log dirs, record deletion, delegation tokens, quotas, SCRAM, feature updates, KRaft/quorum APIs, producer/transaction admin APIs |
 | Config | serializers/deserializers, `group.id`, `auto.offset.reset`, `max.poll.records`, `bootstrap.servers` as DB host/port, `security.protocol`, Oracle service/TNS settings | Kafka broker security/SASL config, multi-broker bootstrap assumptions, Kafka-only topic/log/cluster configs |
 | Topic names | Kafka model types still compile | OKafka/TEQ often expects uppercase topic names; avoid case-sensitive Kafka assumptions |
@@ -452,9 +479,9 @@ For OKafka:
 - Keep `TopicPartition`, `OffsetSpec`, `OffsetAndTimestamp`, and `OffsetAndMetadata` imports from Apache Kafka.
 - Ensure the topic exists in Oracle TEQ before offset queries.
 - Use a subscribed consumer where OKafka requires subscription/assignment.
-- Verify behavior against `clients/src/test/java/org/oracle/okafka/tests/Okafka*` tests before assuming Kafka parity.
+- Do not assume Kafka broker parity for offset behavior; use bounded, observable assertions based on produced records and committed offsets.
 - Expect timestamp and offset behavior to depend on Oracle TEQ message metadata and DB state.
-- When converting `offsetsForTimes` tests, do not blindly preserve Kafka assertions based on timestamps calculated between local `send()` calls. Local `System.currentTimeMillis()` values are not guaranteed to match the Oracle TEQ message timestamp boundaries used by OKafka. Prefer a stable assertion that looks up a timestamp captured immediately before the specific produced record being verified, as in `OkafkaOffsetsForTimes`; treat "between two sends", empty-topic, and after-last timestamp lookups as diagnostic unless the current OKafka tests/source prove the exact expected offset.
+- When converting `offsetsForTimes` tests, do not blindly preserve Kafka assertions based on timestamps calculated between local `send()` calls. Local `System.currentTimeMillis()` values are not guaranteed to match the Oracle TEQ message timestamp boundaries used by OKafka. Prefer stable assertions that verify non-null results for known produced records, null results for future timestamps when appropriate, and monotonic offset behavior instead of exact Kafka broker boundary assumptions.
 
 ## Migration Checklist
 
@@ -477,14 +504,57 @@ For OKafka:
 17. For converted tests only, put test config under test resources and make the test Gradle/IDE discoverable.
 18. Document unsupported behavior, config files, app run commands, Gradle/IDE commands where relevant, and DB setup required.
 
-## Useful Local References
+## Minimal Generic Smoke Flows
 
-When this repository is available, compare against:
+After conversion, validate these flows with the converted application's normal configuration mechanism.
 
-- `clients/src/test/java/org/oracle/okafka/tests/OkafkaTestSupport.java` for current test config handling.
-- `clients/src/test/java/org/oracle/okafka/tests/SimpleOkafkaAdmin.java` for admin create/list/delete smoke.
-- `clients/src/test/java/org/oracle/okafka/tests/SimpleOkafkaProducer.java` for producer send/latest-offset smoke.
-- `clients/src/test/java/org/oracle/okafka/tests/SimpleOkafkaConsumer.java` for subscribe/poll/commit smoke.
-- `clients/src/test/java/org/oracle/okafka/tests/OkafkaListOffsets.java`, `OkafkaOffsetsForTimes.java`, `OkafkaPosition.java`, and `OkafkaConsumerOffsetsLifecycle.java` for offset behavior.
+Admin smoke:
 
-When available, compare old/new standalone runner examples supplied by the user or kept in the target repository.
+```java
+Properties props = okafkaClientProperties();
+try (Admin admin = AdminClient.create(props)) {
+    String topic = "TEQ_SMOKE_" + System.currentTimeMillis();
+    admin.createTopics(Collections.singletonList(new NewTopic(topic, 1, (short) 1))).all().get();
+    if (!admin.listTopics().names().get().contains(topic)) {
+        throw new IllegalStateException("Created topic was not listed: " + topic);
+    }
+    admin.deleteTopics(Collections.singletonList(topic)).all().get();
+}
+```
+
+Producer smoke:
+
+```java
+Properties props = okafkaClientProperties();
+props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+try (Producer<String, String> producer =
+        new org.oracle.okafka.clients.producer.KafkaProducer<>(props)) {
+    producer.send(new ProducerRecord<>("TEQ_SMOKE", "K1", "V1")).get();
+    producer.flush();
+}
+```
+
+Consumer smoke:
+
+```java
+Properties props = okafkaClientProperties();
+props.put("group.id", "G_SMOKE_" + System.currentTimeMillis());
+props.put("auto.offset.reset", "earliest");
+props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+try (Consumer<String, String> consumer =
+        new org.oracle.okafka.clients.consumer.KafkaConsumer<>(props)) {
+    consumer.subscribe(Collections.singletonList("TEQ_SMOKE"));
+    long deadline = System.currentTimeMillis() + 60000L;
+    while (System.currentTimeMillis() < deadline) {
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+        if (!records.isEmpty()) {
+            consumer.commitSync();
+            break;
+        }
+    }
+}
+```
