@@ -15,7 +15,7 @@ import org.junit.Test;
 public class OkafkaSeekToEnd {
 
 	@Test(timeout = 120000)
-	public void SeekEndTest() throws Exception {
+	public void okafkaSeekToEndTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_SEEK_END");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_SEEK_END");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

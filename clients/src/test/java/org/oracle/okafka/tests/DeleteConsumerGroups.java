@@ -13,7 +13,7 @@ import org.junit.Test;
 public class DeleteConsumerGroups {
 
 	@Test(timeout = 120000)
-	public void DeleteGroupsTest() throws Exception {
+	public void deleteConsumerGroupsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_DELETE_GROUP");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_DELETE_GROUP");
 		try (Admin admin = OkafkaTestSupport.admin()) {

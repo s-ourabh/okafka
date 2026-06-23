@@ -13,7 +13,7 @@ import org.junit.Test;
 public class OkafkaBeginningOffsets {
 
 	@Test(timeout = 120000)
-	public void BeginningOffsetsTest() throws Exception {
+	public void okafkaBeginningOffsetsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_BEGINNING");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_BEGINNING");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

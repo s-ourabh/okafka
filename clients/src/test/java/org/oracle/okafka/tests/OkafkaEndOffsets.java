@@ -14,7 +14,7 @@ import org.junit.Test;
 public class OkafkaEndOffsets {
 
 	@Test(timeout = 120000)
-	public void EndOffsetsTest() throws Exception {
+	public void okafkaEndOffsetsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_END");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_END");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

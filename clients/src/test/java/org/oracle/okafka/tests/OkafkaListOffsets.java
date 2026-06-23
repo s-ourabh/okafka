@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class OkafkaListOffsets {
 	@Test(timeout = 120000)
-	public void ListOffsetTest() throws Exception {
+	public void okafkaListOffsetsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_LIST_OFFSETS");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {

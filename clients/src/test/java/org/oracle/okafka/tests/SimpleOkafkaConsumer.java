@@ -12,7 +12,7 @@ import org.junit.Test;
 public class SimpleOkafkaConsumer {
 
 	@Test(timeout = 120000)
-	public void ConsumerTest() throws Exception {
+	public void simpleOkafkaConsumerTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_CONSUMER");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_CONSUMER");
 		try (Admin admin = OkafkaTestSupport.admin()) {

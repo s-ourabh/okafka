@@ -15,7 +15,7 @@ import org.junit.Test;
 public class ConsumerMetricsTest {
 
 	@Test(timeout = 120000)
-	public void ConsumingTest() throws Exception {
+	public void consumerMetricsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_CONSUMER_METRICS");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_CONSUMER_METRICS");
 		try (Admin admin = OkafkaTestSupport.admin()) {

@@ -16,7 +16,7 @@ import org.junit.Test;
 public class OkafkaOffsetsForTimes {
 
 	@Test(timeout = 120000)
-	public void OffsetsForTimesTest() throws Exception {
+	public void okafkaOffsetsForTimesTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_OFFSETS_FOR_TIMES");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_OFFSETS_FOR_TIMES");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

@@ -18,7 +18,7 @@ import org.junit.Test;
 public class ListConsumerGroupOffsets {
 
 	@Test(timeout = 120000)
-	public void ListConsumerGroupOffsetsTest() throws Exception {
+	public void listConsumerGroupOffsetsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_GROUP_OFFSETS");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_GROUP_OFFSETS");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

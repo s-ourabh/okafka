@@ -15,7 +15,7 @@ import org.junit.Test;
 public class OkafkaSeekToBeginning {
 
 	@Test(timeout = 120000)
-	public void SeekBeginningTest() throws Exception {
+	public void okafkaSeekToBeginningTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_SEEK_BEGIN");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_SEEK_BEGIN");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

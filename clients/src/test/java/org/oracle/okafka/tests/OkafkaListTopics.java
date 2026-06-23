@@ -9,7 +9,7 @@ import org.junit.Test;
 public class OkafkaListTopics {
 
 	@Test(timeout = 120000)
-	public void AdminTest() throws Exception {
+	public void okafkaListTopicsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_LIST_TOPICS");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {

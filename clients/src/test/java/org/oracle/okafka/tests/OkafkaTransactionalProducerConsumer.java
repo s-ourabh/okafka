@@ -29,7 +29,7 @@ public class OkafkaTransactionalProducerConsumer {
 	private static final Duration TARGET_EMPTY_TIMEOUT = Duration.ofSeconds(5);
 
 	@Test(timeout = 180000)
-	public void TransactionalProducerConsumerTest() throws Exception {
+	public void okafkaTransactionalProducerConsumerTest() throws Exception {
 		String sourceTopic = OkafkaTestSupport.uniqueTopic("TEQ_TXN_SOURCE");
 		String targetTopic = OkafkaTestSupport.uniqueTopic("TEQ_TXN_TARGET");
 		String sourceGroupId = OkafkaTestSupport.uniqueGroup("G_TXN_SOURCE");

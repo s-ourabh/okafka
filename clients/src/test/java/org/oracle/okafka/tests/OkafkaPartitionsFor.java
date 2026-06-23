@@ -13,7 +13,7 @@ import org.junit.Test;
 public class OkafkaPartitionsFor {
 
 	@Test(timeout = 120000)
-	public void PartitionsForTest() throws Exception {
+	public void okafkaPartitionsForTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_PARTITIONS_FOR");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_PARTITIONS_FOR");
 

@@ -12,7 +12,7 @@ import org.junit.Test;
 public class OkafkaAutoOffsetReset {
 
 	@Test(timeout = 120000)
-	public void autoOffsetSeekTest() throws Exception {
+	public void okafkaAutoOffsetResetTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_AUTO_OFFSET");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_AUTO_OFFSET");
 		try (Admin admin = OkafkaTestSupport.admin()) {

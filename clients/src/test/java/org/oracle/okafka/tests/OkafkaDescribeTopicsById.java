@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class OkafkaDescribeTopicsById {
 	@Test(timeout = 120000)
-	public void AdminTest() throws Exception {
+	public void okafkaDescribeTopicsByIdTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_DESCRIBE_ID");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {

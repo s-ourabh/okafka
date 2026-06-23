@@ -12,7 +12,7 @@ import org.junit.Test;
 public class ProducerMetricsTest {
 
 	@Test(timeout = 120000)
-	public void ProducerTest() throws Exception {
+	public void producerMetricsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_PRODUCER_METRICS");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {

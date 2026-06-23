@@ -11,7 +11,7 @@ import org.junit.Test;
 public class SimpleOkafkaProducer {
 
 	@Test(timeout = 120000)
-	public void ProducerTest() throws Exception {
+	public void simpleOkafkaProducerTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_PRODUCER");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);
 		try (Admin admin = OkafkaTestSupport.admin()) {

@@ -9,7 +9,7 @@ import org.junit.Test;
 public class OkafkaDeleteTopic {
 
 	@Test(timeout = 120000)
-	public void DeleteTopicTest() throws Exception {
+	public void okafkaDeleteTopicTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_DELETE_TOPIC");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			OkafkaTestSupport.createTopic(admin, topic, 1);

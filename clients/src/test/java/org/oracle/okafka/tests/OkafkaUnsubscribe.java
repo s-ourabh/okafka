@@ -12,7 +12,7 @@ import org.junit.Test;
 public class OkafkaUnsubscribe {
 
 	@Test(timeout = 120000)
-	public void UnsubscribeTest() throws Exception {
+	public void okafkaUnsubscribeTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_UNSUBSCRIBE");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_UNSUBSCRIBE");
 		try (Admin admin = OkafkaTestSupport.admin()) {

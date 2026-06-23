@@ -34,7 +34,7 @@ public class OkafkaConsumerOffsetsLifecycle {
 	private static final int SMALL_MAX_POLL_RECORDS = 1;
 
 	@Test
-	public void ConsumerOffsetsLifecycleTest() {
+	public void okafkaConsumerOffsetsLifecycleTest() {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_OFFSETS");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_OFFSETS");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);
@@ -165,7 +165,7 @@ public class OkafkaConsumerOffsetsLifecycle {
 			assertSnapshot("step20-after-restart-without-commit", consumerHandle.consumer, topicPartition, topicPartitions, 0L,
 					producedCount, committedCount, false);
 		} catch (Exception e) {
-			throw new AssertionError("ConsumerOffsetsLifecycleTest failed with exception", e);
+			throw new AssertionError("okafkaConsumerOffsetsLifecycleTest failed with exception", e);
 		} finally {
 			if (consumerHandle != null && consumerHandle.consumer != null) {
 				System.out.println("Closing Consumer");

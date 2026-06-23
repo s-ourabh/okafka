@@ -17,7 +17,7 @@ import org.junit.Test;
 public class OkafkaFetchCommittedOffset {
 
 	@Test(timeout = 120000)
-	public void FetchCommittedOffsetTest() throws Exception {
+	public void okafkaFetchCommittedOffsetTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_COMMITTED");
 		String groupId = OkafkaTestSupport.uniqueGroup("G_COMMITTED");
 		TopicPartition topicPartition = new TopicPartition(topic, 0);

@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class OkafkaCreatePartitions {
 	@Test(timeout = 120000)
-	public void CreatePartitionsTest() throws Exception {
+	public void okafkaCreatePartitionsTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_CREATE_PARTITIONS");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {

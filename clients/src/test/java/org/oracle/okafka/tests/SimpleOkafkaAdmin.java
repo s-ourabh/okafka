@@ -7,7 +7,7 @@ import org.junit.Test;
 public class SimpleOkafkaAdmin {
 
 	@Test(timeout = 120000)
-	public void AdminTest() throws Exception {
+	public void simpleOkafkaAdminTest() throws Exception {
 		String topic = OkafkaTestSupport.uniqueTopic("TEQ_ADMIN");
 		try (Admin admin = OkafkaTestSupport.admin()) {
 			try {
