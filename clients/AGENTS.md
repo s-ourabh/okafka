@@ -69,17 +69,21 @@ Main Directories:
    
 ## Skills
 
-  When working on testing, validation, or behavior changes, use the `okafka-testing-review` skill if available.
+  Use `KAFKA_TO_OKAFKA_SKILL.md` when converting an Apache Kafka Java application to an OKafka application backed by Oracle Database TEQ.
 
   Use this skill for:
-    - deciding what tests should be added or updated
-    - reviewing producer, consumer, admin, or common-code behavior changes
-    - preparing a validation summary
+    - migrating Kafka producer, consumer, and admin client construction to OKafka
+    - updating imports while keeping Kafka shared model types where OKafka still uses them
+    - converting Kafka client properties to OKafka and Oracle TEQ properties
+    - checking for APIs that OKafka does not support or handles differently
+    - preserving OKafka-specific behavior around topic handling, offsets, Oracle transactions, and transactional producer usage
+    - preparing validation commands and noting behavior that requires a live Oracle Database TEQ environment
 
-  The agent should refer to the testing skill before finalizing changes that affect runtime behavior.   
+  How to use it:
+    - First read `clients/KAFKA_TO_OKAFKA_SKILL.md`.
+    - Then read `clients/KAFKA_TO_OKAFKA_CONVERSION_GUIDE.md` for the detailed conversion checklist and API notes.
+    - Inspect the target Kafka application before editing.
+    - Apply the smallest conversion that preserves the application's behavior under OKafka.
+    - Document any unsupported APIs, required Oracle DB/TEQ configuration, and behavior that still needs live database validation.
 
-  The final response must include:
-    - tests added or updated
-    - tests run
-    - behavior not validated
-    - risks or follow-up testing needed
+  If an AI assistant does not support structured skills, treat `KAFKA_TO_OKAFKA_SKILL.md` and `KAFKA_TO_OKAFKA_CONVERSION_GUIDE.md` as ordinary markdown instructions and follow them directly.
